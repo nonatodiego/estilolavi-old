@@ -57,6 +57,8 @@ export const pedidos = sqliteTable("pedidos", {
   // JSON: { produtoId, nome, preco, qtd, tamanho, cor, imagemUrl }[]
   itens: text("itens").notNull().default("[]"),
   total: real("total").notNull(),
+  frete: real("frete").notNull().default(0),
+  entregaTipo: text("entrega_tipo").notNull().default("estacao"),
   pixKey: text("pix_key").notNull().default(""),
   qrCodeData: text("qr_code_data").notNull().default(""), // EMV BR Code payload
   // pendente | pago | enviado | cancelado
@@ -90,20 +92,21 @@ export interface PedidoItem {
 
 // ============ Schema validações entrada (frontend) ============
 export const checkoutSchema = z.object({
-  clienteNome: z.string().min(2, "Informe seu nome"),
-  clienteWhatsapp: z.string().min(8, "WhatsApp inválido"),
+  clienteNome: z.string().trim().min(2, "Informe seu nome completo").max(150),
+  clienteWhatsapp: z.string().trim().regex(/^[+\d\s()-]{10,20}$/, "Informe um WhatsApp com DDD").refine((value) => /^\d{10,13}$/.test(value.replace(/\D/g, "")), "Informe um WhatsApp com DDD"),
   clienteEmail: z.string().email("Email inválido").or(z.literal("")),
-  enderecoEntrega: z.string().min(5, "Informe o endereço de entrega"),
-  observacoes: z.string().optional(),
+  enderecoEntrega: z.string().trim().min(3, "Informe o local da entrega").max(500),
+  entregaTipo: z.enum(["estacao", "uber"]),
+  observacoes: z.string().max(1000).optional(),
   itens: z.array(z.object({
-    produtoId: z.number(),
+    produtoId: z.number().int().positive(),
     nome: z.string(),
-    preco: z.number(),
-    qtd: z.number().min(1),
+    preco: z.number().finite().nonnegative(),
+    qtd: z.number().int().min(1).max(99),
     tamanho: z.string().optional(),
     cor: z.string().optional(),
     imagemUrl: z.string().optional(),
-  })).min(1, "Carrinho vazio"),
+  })).min(1, "Carrinho vazio").max(100),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

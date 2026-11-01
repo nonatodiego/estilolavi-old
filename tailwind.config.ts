@@ -11,6 +11,8 @@ export default {
         sm: ".1875rem", /* 3px */
       },
       colors: {
+        gold: "hsl(var(--gold) / <alpha-value>)",
+        "rose-soft": "hsl(var(--rose-soft) / <alpha-value>)",
         // Flat / base colors (regular buttons)
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
