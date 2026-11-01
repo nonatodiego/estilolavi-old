@@ -9,6 +9,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { randomBytes } from "node:crypto";
+import { prepararPedido } from "./lib/checkout";
+import { ENTREGA_LABELS } from "@shared/checkout";
 
 const PIX_KEY = process.env.PIX_KEY || "laisavitoriaa77@gmail.com";
 const WA_PHONE = process.env.WA_PHONE || "5521970838278"; // 55 + DDD + número
@@ -78,24 +80,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/pedidos", async (req, res) => {
     try {
       const data = checkoutSchema.parse(req.body);
-      // Recalcula total no servidor (segurança)
-      let total = 0;
-      for (const item of data.itens) {
-        const p = await storage.getProduto(item.produtoId);
-        if (!p) return res.status(400).json({ error: `Produto ${item.produtoId} indisponível` });
-        total += p.preco * item.qtd;
-      }
-      total = Math.round(total * 100) / 100;
+      let resumo;
+      try { resumo = await prepararPedido(data, (id) => storage.getProduto(id)); }
+      catch (error) { return res.status(400).json({ error: (error as Error).message }); }
+      const { total, subtotal, frete, itens } = resumo;
 
       // Cria pedido temporário p/ pegar ID, depois atualiza qrCode
       const pedidoCriado = await storage.createPedido({
         clienteNome: data.clienteNome,
         clienteWhatsapp: data.clienteWhatsapp,
         clienteEmail: data.clienteEmail || "",
-        enderecoEntrega: data.enderecoEntrega,
+        enderecoEntrega: `${ENTREGA_LABELS[data.entregaTipo]}: ${data.enderecoEntrega}`,
         observacoes: data.observacoes || "",
-        itens: JSON.stringify(data.itens),
+        itens: JSON.stringify(itens),
         total,
+        frete,
+        entregaTipo: data.entregaTipo,
         pixKey: PIX_KEY,
         qrCodeData: "",
       });
@@ -111,21 +111,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const qrPng = await QRCode.toDataURL(payload, { margin: 1, width: 320 });
 
       // Atualiza pedido com payload
-      const atualizado = await (storage as any).updatePedidoPix?.(pedidoCriado.id, payload) || pedidoCriado;
-      // Como não temos esse método, vamos fazer direto via update genérico:
       const { db } = await import("./storage");
       const { pedidos } = await import("@shared/schema");
       const { eq } = await import("drizzle-orm");
       db.update(pedidos).set({ qrCodeData: payload }).where(eq(pedidos.id, pedidoCriado.id)).run();
 
       const mensagemWa = encodeURIComponent(
-        `Olá! Acabei de pagar o pedido #${pedidoCriado.id} de R$ ${total.toFixed(2).replace(".", ",")} - Nome: ${data.clienteNome}. Segue o comprovante.`
+        data.entregaTipo === "uber"
+          ? `Olá! Quero combinar a entrega por Uber do pedido #${pedidoCriado.id}, no valor de R$ ${total.toFixed(2).replace(".", ",")}.`
+          : `Olá! Quero falar sobre a entrega e o pagamento do pedido #${pedidoCriado.id}, no valor de R$ ${total.toFixed(2).replace(".", ",")}.`
       );
       const linkWhatsapp = `https://wa.me/${WA_PHONE}?text=${mensagemWa}`;
 
       res.json({
         pedidoId: pedidoCriado.id,
         total,
+        subtotal,
+        frete,
+        entregaTipo: data.entregaTipo,
+        itens,
         pixKey: PIX_KEY,
         pixCopiaCola: payload,
         qrCodeImg: qrPng,
@@ -149,6 +153,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       id: p.id,
       status: p.status,
       total: p.total,
+      frete: p.frete,
+      entregaTipo: p.entregaTipo,
       pixKey: p.pixKey,
       pixCopiaCola: p.qrCodeData,
       dataCriacao: p.dataCriacao,

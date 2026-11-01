@@ -2,18 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    color-scheme: light;
+    --background: 35 43% 98%;
+    --foreground: 346 24% 18%;
+    --card: 30 50% 99%;
+    --card-foreground: 346 24% 18%;
+    --card-border: 350 22% 85%;
+    --popover: 30 50% 99%;
+    --popover-foreground: 346 24% 18%;
+    --popover-border: 350 22% 85%;
+    --primary: 348 35% 35%;
+    --primary-foreground: 35 43% 98%;
+    --primary-border: hsl(348 35% 35%);
+    --secondary: 351 35% 93%;
+    --secondary-foreground: 346 24% 23%;
+    --secondary-border: hsl(350 22% 85%);
+    --muted: 350 24% 94%;
+    --muted-foreground: 348 15% 41%;
+    --muted-border: hsl(350 22% 85%);
+    --accent: 36 40% 91%;
+    --accent-foreground: 346 24% 18%;
+    --accent-border: hsl(36 30% 75%);
+    --destructive: 0 65% 39%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-border: hsl(0 65% 39%);
+    --border: 350 22% 85%;
+    --input: 348 18% 67%;
+    --ring: 348 35% 35%;
+    --button-outline: hsl(348 18% 67%);
+    --gold: 35 55% 30%;
+    --rose-soft: 351 35% 93%;
+    --font-sans: Inter, sans-serif;
+    --font-serif: "Cormorant Garamond", Georgia, serif;
+    --font-mono: ui-monospace, monospace;
+  }
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 4px;
+  }
+  input,
+  textarea,
+  select {
+    caret-color: hsl(var(--primary));
+  }
+  ::selection {
+    background: hsl(351 35% 85%);
+    color: hsl(var(--foreground));
+  }
+  html {
+    scrollbar-color: hsl(348 18% 67%) hsl(var(--background));
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
   font-family: Inter, sans-serif;
-  background: #ffffff;
-  color: #18181b;
 }
 
 button {
-  transition: all 0.3s ease;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.hover-elevate:hover {
+  filter: brightness(0.96);
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 img {

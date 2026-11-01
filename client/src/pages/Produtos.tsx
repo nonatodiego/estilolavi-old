@@ -10,10 +10,17 @@ import type { ProdutoView } from "@shared/schema";
 import { Search } from "lucide-react";
 
 export default function Produtos() {
-  const { data: produtos, isLoading } = useQuery<ProdutoView[]>({
+  const {
+    data: produtos,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<ProdutoView[]>({
     queryKey: ["/api/produtos"],
   });
-  const { data: config } = useQuery<{ whatsapp: string }>({ queryKey: ["/api/config"] });
+  const { data: config } = useQuery<{ whatsapp: string }>({
+    queryKey: ["/api/config"],
+  });
 
   const [busca, setBusca] = useState("");
   const [tamanho, setTamanho] = useState<string>("");
@@ -39,7 +46,8 @@ export default function Produtos() {
 
   const filtrados = useMemo(() => {
     return (produtos || []).filter((p) => {
-      if (busca && !p.nome.toLowerCase().includes(busca.toLowerCase())) return false;
+      if (busca && !p.nome.toLowerCase().includes(busca.toLowerCase()))
+        return false;
       if (tamanho && !p.tamanhos.includes(tamanho)) return false;
       if (cor && !p.cores.includes(cor)) return false;
       if (precoMax > 0 && p.preco > precoMax) return false;
@@ -68,7 +76,8 @@ export default function Produtos() {
             Todos os produtos
           </h1>
           <p className="text-sm text-muted-foreground">
-            {(filtrados.length || 0)} {filtrados.length === 1 ? "peça" : "peças"} encontradas
+            {filtrados.length || 0} {filtrados.length === 1 ? "peça" : "peças"}{" "}
+            encontradas
           </p>
         </div>
 
@@ -77,6 +86,7 @@ export default function Produtos() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar produto..."
+              aria-label="Buscar produto pelo nome"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               className="pl-9"
@@ -88,6 +98,7 @@ export default function Produtos() {
             onChange={(e) => setTamanho(e.target.value)}
             className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             data-testid="select-tamanho"
+            aria-label="Filtrar por tamanho"
           >
             <option value="">Tamanho</option>
             {todosTamanhos.map((t) => (
@@ -101,6 +112,7 @@ export default function Produtos() {
             onChange={(e) => setCor(e.target.value)}
             className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             data-testid="select-cor"
+            aria-label="Filtrar por cor"
           >
             <option value="">Cor</option>
             {todasCores.map((c) => (
@@ -114,13 +126,16 @@ export default function Produtos() {
             onChange={(e) => setPrecoMax(Number(e.target.value))}
             className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             data-testid="select-preco"
+            aria-label="Filtrar por preço máximo"
           >
             <option value={0}>Preço</option>
-            {[100, 150, 200, 300, maxPreco].filter((v) => v > 0).map((v) => (
-              <option key={v} value={v}>
-                Até R$ {v}
-              </option>
-            ))}
+            {[100, 150, 200, 300, maxPreco]
+              .filter((v) => v > 0)
+              .map((v) => (
+                <option key={v} value={v}>
+                  Até R$ {v}
+                </option>
+              ))}
           </select>
           <Button
             variant="outline"
@@ -137,9 +152,25 @@ export default function Produtos() {
               <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
             ))}
           </div>
+        ) : isError ? (
+          <div role="alert" className="rounded-xl border p-6 text-center">
+            <p>
+              Não foi possível carregar os produtos. Confira sua conexão e tente
+              novamente.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => refetch()}
+            >
+              Tentar novamente
+            </Button>
+          </div>
         ) : filtrados.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-12 text-center">
-            <p className="text-muted-foreground">Nenhum produto encontrado com esses filtros.</p>
+            <p className="text-muted-foreground">
+              Nenhum produto encontrado com esses filtros.
+            </p>
             <Button variant="outline" onClick={limparFiltros} className="mt-4">
               Limpar filtros
             </Button>

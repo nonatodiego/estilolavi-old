@@ -9,19 +9,24 @@ export function Footer({ whatsapp }: { whatsapp?: string }) {
         <div>
           <Logo />
           <p className="mt-3 text-sm text-muted-foreground max-w-xs">
-            Moda feminina autoral com peças cuidadosamente escolhidas para você se sentir única.
+            Moda feminina autoral com peças cuidadosamente escolhidas para você
+            se sentir única.
           </p>
         </div>
         <div>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider">Atendimento</h3>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider">
+            Atendimento
+          </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>Pagamento via Pix</li>
-            <li>Envio para todo o Brasil</li>
+            <li>Entrega em estação ou por Uber</li>
             <li>Trocas em até 7 dias</li>
           </ul>
         </div>
         <div>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider">Fale com a gente</h3>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider">
+            Fale com a gente
+          </h3>
           <div className="flex gap-3">
             {whatsapp && (
               <a
@@ -30,16 +35,18 @@ export function Footer({ whatsapp }: { whatsapp?: string }) {
                 rel="noreferrer"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] text-white hover-elevate"
                 data-testid="link-footer-whatsapp"
+                aria-label="Falar com a Estilo Lavi no WhatsApp"
               >
                 <SiWhatsapp className="h-5 w-5" />
               </a>
             )}
             <a
-              href="https://instagram.com"
+              href="https://instagram.com/estilolavi"
               target="_blank"
               rel="noreferrer"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background hover-elevate"
               data-testid="link-footer-instagram"
+              aria-label="Instagram da Estilo Lavi"
             >
               <Instagram className="h-5 w-5" />
             </a>

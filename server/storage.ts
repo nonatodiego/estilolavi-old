@@ -55,6 +55,10 @@ sqlite.exec(`
 `);
 
 export const db = drizzle(sqlite);
+// Add delivery fields without replacing existing orders or data.
+const pedidoColumns = sqlite.pragma("table_info(pedidos)") as { name: string }[];
+if (!pedidoColumns.some((column) => column.name === "frete")) sqlite.exec("ALTER TABLE pedidos ADD COLUMN frete REAL NOT NULL DEFAULT 0");
+if (!pedidoColumns.some((column) => column.name === "entrega_tipo")) sqlite.exec("ALTER TABLE pedidos ADD COLUMN entrega_tipo TEXT NOT NULL DEFAULT 'estacao'");
 
 // ============ Helpers ============
 export function produtoToView(p: Produto): ProdutoView {
